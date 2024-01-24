@@ -1,115 +1,27 @@
-<!-- templates/treeapp/tree.html -->
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Tree Management</title>
-    <style>
-        ul {
-            list-style-type: none;
-            padding-left: 20px;  /* Adjust the indentation based on your preference */
-            display: flex;  /* Use flexbox to create a horizontal layout for parent nodes */
-            flex-wrap: wrap;  /* Allow items to wrap onto the next line */
-        }
-    
-        li {
-            position: relative;
-            flex: 0 0 100%;  /* Each li takes the full width of the container */
-        }
-    
-        li:before {
-            content: "";
-            position: absolute;
-            border-left: 1px solid #000;  /* Change the color as needed */
-            height: 100%;
-            left: -10px;  /* Adjust the position of the branch line */
-            top: 0;
-        }
-    
-        .edit-form,
-        .delete-button,
-        .delete-form {
-            display: none;
-        }
-    
-        .node-link {
-            text-decoration: underline;
-            cursor: pointer;
-            color: blue;
-        }
-    </style>
-    
-</head>
-<body>
-    <h1>Tree Structure</h1>
+<!-- tree.html -->
+{% load mptt_tags %}
 
-    <ul>
-        {% for node in nodes %}
-            <li>
-                <span class="node-link" data-index="{{ forloop.counter0 }}">{{ node.label }}</span>
-                <form method="post" action="{% url 'edit-node' node.id %}" class="edit-form" style="display:none;">
-                    {% csrf_token %}
-                    <input type="text" name="label" placeholder="New Label" required>
-                    <button type="submit">Edit</button>
-                </form>
-                <form method="post" action="{% url 'delete-node' node.id %}" class="delete-form" style="display:none;">
-                    {% csrf_token %}
-                    <button type="submit">Delete</button>
-                </form>
+<ul class="tree">
+    {% recursetree nodes %}
+        <li>
+            {{ node.label }}
+            <form method="post" action="{% url 'edit-node' node.id %}" style="display:inline;">
+                {% csrf_token %}
+                <input type="submit" value="Edit">
+            </form>
+            <form method="post" action="{% url 'delete-node' node.id %}" style="display:inline;">
+                {% csrf_token %}
+                <input type="submit" value="Delete">
+            </form>
+            {% if not node.is_leaf_node %}
+                <ul>{{ children }}</ul>
+            {% endif %}
+        </li>
+    {% endrecursetree %}
+</ul>
 
-                {% if node.parent %}
-                    <ul>
-                        <li>{{ node.parent.label }} (Parent)</li>
-                    </ul>
-                {% endif %}
-            </li>
-        {% endfor %}
-    </ul>
-
-    <form method="post" action="{% url 'add-node' %}">
-        {% csrf_token %}
-        <label for="id_label">New Node Label:</label>
-        <input type="text" name="label" required>
-    
-        <label for="id_parent">Parent Node:</label>
-        <select name="parent">
-            <option value="" selected>None (Root Node)</option>
-            {% for node in nodes %}
-                <option value="{{ node.id }}">{{ node.label }}</option>
-            {% endfor %}
-        </select>
-    
-        <button type="submit">Add Node</button>
-    </form>
-
-    <script>
-        // JavaScript to toggle the visibility of edit forms and delete buttons
-        document.addEventListener('DOMContentLoaded', function () {
-            const nodeLinks = document.querySelectorAll('.node-link');
-            const editForms = document.querySelectorAll('.edit-form');
-            const deleteButtons = document.querySelectorAll('.delete-button');
-            const deleteForms = document.querySelectorAll('.delete-form');
-
-            nodeLinks.forEach((link, index) => {
-                link.addEventListener('click', function () {
-                    toggleVisibility(index, editForms, deleteButtons, deleteForms);
-                });
-            });
-
-            function toggleVisibility(index, editForms, deleteButtons, deleteForms) {
-                editForms.forEach((form, i) => {
-                    form.style.display = (i === index && form.style.display === 'none') ? 'block' : 'none';
-                });
-
-                deleteButtons.forEach((button, i) => {
-                    button.style.display = (i === index && button.style.display === 'none') ? 'block' : 'none';
-                });
-
-                deleteForms.forEach((form, i) => {
-                    form.style.display = (i === index && form.style.display === 'none') ? 'block' : 'none';
-                });
-            }
-        });
-    </script>
-</body>
-</html>
+<form method="post" action="{% url 'add-node' %}">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <input type="submit" value="Add Node">
+</form>

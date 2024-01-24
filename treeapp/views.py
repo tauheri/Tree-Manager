@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.views.generic import View
-from .models import TreeNode
-from .forms import TreeNodeForm
+from treeapp.forms import TreeNodeForm
+from treeapp.models import TreeNode
 
 class TreeView(View):
     template_name = 'treeapp/tree.html'
@@ -30,14 +30,18 @@ class AddNodeView(View):
         return redirect('tree')
 
 class EditNodeView(View):
+    template_name = 'treeapp/tree.html'
+
     def post(self, request, node_id):
         node = TreeNode.objects.get(id=node_id)
         form = TreeNodeForm(request.POST, instance=node)
         if form.is_valid():
             form.save()
         return redirect('tree')
-
+    
 class DeleteNodeView(View):
+    template_name = 'treeapp/tree.html'
+
     def post(self, request, node_id):
         node = TreeNode.objects.get(id=node_id)
         node.delete()
