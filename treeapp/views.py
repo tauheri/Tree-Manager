@@ -3,6 +3,8 @@ from django.views.generic import View
 from treeapp.forms import TreeNodeForm
 from treeapp.models import TreeNode
 
+
+
 class TreeView(View):
     template_name = 'treeapp/tree.html'
 
@@ -10,6 +12,7 @@ class TreeView(View):
         nodes = TreeNode.objects.all()
         form = TreeNodeForm()
         return render(request, self.template_name, {'nodes': nodes, 'form': form})
+
 
 class AddNodeView(View):
     template_name = 'treeapp/tree.html'
@@ -29,15 +32,20 @@ class AddNodeView(View):
             form.save()
         return redirect('tree')
 
+
 class EditNodeView(View):
     template_name = 'treeapp/tree.html'
 
     def post(self, request, node_id):
         node = TreeNode.objects.get(id=node_id)
         form = TreeNodeForm(request.POST, instance=node)
+        
+        form.fields.pop('parent', None)
+        
         if form.is_valid():
             form.save()
         return redirect('tree')
+    
     
 class DeleteNodeView(View):
     template_name = 'treeapp/tree.html'
